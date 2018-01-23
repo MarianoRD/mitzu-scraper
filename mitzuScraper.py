@@ -1,5 +1,6 @@
 # Libraries
 import requests
+import urllib.request
 from bs4 import BeautifulSoup
 
 '''
@@ -37,10 +38,29 @@ def get_product_data(url):
     model = product_Soup.select('.sku')
     model = model[0].text
     # Builds the product
-    product = dict(imges=images, title=title, description=description,
+    product = dict(images=images, title=title, description=description,
                    model=model)
     print(product)
+
     return product
+
+
+def save_product_data(file_path, products):
+    with open(file_path, 'a') as file:
+        for product in products:
+            file.write('{0},{1},{2}\n'.format(product['title'],
+                                              product['description'],
+                                              product['model']))
+            i = 0
+            for image in product['images']:
+                if (i == 0):
+                    urllib.request.urlretrieve(image, product['model'] +
+                                               '.png')
+                else:
+                    urllib.request.urlretrieve(image, product['model'] + '-'
+                                               + i + '.png')
+                i += 1
+    file.closed
 
 
 # Set initial URL
