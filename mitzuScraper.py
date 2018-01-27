@@ -17,6 +17,25 @@ def get_products_url(url, products):
         products.append(link['href'])
 
 
+def save_product_data(file_path, product):
+    with open(file_path, 'a') as file:
+        line = '{0},{1},{2}\n'.format(product['title'],
+                                      product['description'],
+                                      product['model'])
+        file.write(line)
+        i = 0
+        for image in product['images']:
+            if (i == 0):
+                path = 'images/' + product['model'] + '.png'
+                path = path.replace("/", "")
+                urllib.request.urlretrieve(image, path)
+            else:
+                path = 'images/' + product['model'] + '-' + str(i) + '.png'
+                urllib.request.urlretrieve(image, path)
+            i += 1
+    file.closed
+
+
 def get_product_data(url):
     request = requests.get(url)
     product_Soup = BeautifulSoup(request.text, 'html.parser')
@@ -38,31 +57,23 @@ def get_product_data(url):
     # Builds the product
     product = dict(images=images, title=title, description=description,
                    model=model)
-
-    return product
-
-
-def save_product_data(file_path, products):
-    with open(file_path, 'a') as file:
-        for product in products:
-            line = '{0},{1},{2}\n'.format(product['title'],
-                                          product['description'],
-                                          product['model'])
-            file.write(line)
-            i = 0
-            for image in product['images']:
-                if (i == 0):
-                    path = 'images/' + product['model'] + '.png'
-                    urllib.request.urlretrieve(image, path)
-                else:
-                    path = 'images/' + product['model'] + '-' + i + '.png'
-                    urllib.request.urlretrieve(image, path)
-                i += 1
+    # Saves the product data
+    save_product_data('products.csv', product)
+    # Mark the product as processed
+    with open('processed.txt', 'a') as file:
+        line = url + "\n"
+        file.write(line)
     file.closed
 
 
-# Set initial URL and time
+# Set initial URL
 url = 'http://www.mitzu.com/productos/'
+
+# Retrieves already processed products
+processed = list()
+with open('processed.txt', 'r') as file:
+    processed = file.readlines()
+file.closed
 
 # Initial request
 request = requests.get(url)
@@ -80,12 +91,12 @@ for category in categories:
     url = category + "?product_count=400"
     get_products_url(url, products_links)
 
-# Gets the data from each product
-products = list()
+# Gets and save the data from each product
 for url in products_links:
     print(url)
     print("Product: " + url)
-    products.append(get_product_data(url))
-
-# Save the data of the products
-save_product_data('products.csv', products)
+    # Check is the product has already been processed
+    if (url in processed):
+        pass
+    else:
+        get_product_data(url)
