@@ -1,6 +1,7 @@
 # Libraries
 import requests
 import urllib.request
+from time import time
 from bs4 import BeautifulSoup
 
 '''
@@ -8,15 +9,12 @@ from bs4 import BeautifulSoup
 '''
 
 
-def get_products_url(url):
-    products_temp = list()
+def get_products_url(url, products):
     request = requests.get(url)
     category_Soup = BeautifulSoup(request.text, 'html.parser')
     data = category_Soup.select('h4 > a')
     for link in data:
-        products_temp.append(link['href'])
-
-    return products_temp
+        products.append(link['href'])
 
 
 def get_product_data(url):
@@ -32,7 +30,7 @@ def get_product_data(url):
     title = product_Soup.select('.product_title')
     title = title[0].text
     # Gets description
-    description = product_Soup.select('.description > p')
+    description = product_Soup.select('.description')
     description = description[0].text
     # Gets Model (SKU)
     model = product_Soup.select('.sku')
@@ -40,7 +38,6 @@ def get_product_data(url):
     # Builds the product
     product = dict(images=images, title=title, description=description,
                    model=model)
-    print(product)
 
     return product
 
@@ -48,22 +45,23 @@ def get_product_data(url):
 def save_product_data(file_path, products):
     with open(file_path, 'a') as file:
         for product in products:
-            file.write('{0},{1},{2}\n'.format(product['title'],
-                                              product['description'],
-                                              product['model']))
+            line = '{0},{1},{2}\n'.format(product['title'],
+                                          product['description'],
+                                          product['model'])
+            file.write(line)
             i = 0
             for image in product['images']:
                 if (i == 0):
-                    urllib.request.urlretrieve(image, product['model'] +
-                                               '.png')
+                    path = 'images/' + product['model'] + '.png'
+                    urllib.request.urlretrieve(image, path)
                 else:
-                    urllib.request.urlretrieve(image, product['model'] + '-'
-                                               + i + '.png')
+                    path = 'images/' + product['model'] + '-' + i + '.png'
+                    urllib.request.urlretrieve(image, path)
                 i += 1
     file.closed
 
 
-# Set initial URL
+# Set initial URL and time
 url = 'http://www.mitzu.com/productos/'
 
 # Initial request
@@ -80,15 +78,14 @@ products_links = list()
 for category in categories:
     print("Category: " + category)
     url = category + "?product_count=400"
-    products_links.append(get_products_url(url))
+    get_products_url(url, products_links)
 
 # Gets the data from each product
 products = list()
-for product in products_links:
-    print("Product: " + product)
+for url in products_links:
+    print(url)
+    print("Product: " + url)
     products.append(get_product_data(url))
 
 # Save the data of the products
-
-# Save text in CSV
-# Save images
+save_product_data('products.csv', products)
