@@ -26,8 +26,7 @@ def save_product_data(file_path, product):
         i = 0
         for image in product['images']:
             if (i == 0):
-                path = 'images/' + product['model'] + '.png'
-                path = path.replace("/", "")
+                path = 'images/' + product['model'].replace("/", "") + '.png'
                 urllib.request.urlretrieve(image, path)
             else:
                 path = 'images/' + product['model'] + '-' + str(i) + '.png'
@@ -95,8 +94,8 @@ for category in categories:
 for url in products_links:
     print("Product: " + url)
     # Check is the product has already been processed
-    if (url in processed):
+    if (url + "\n" in processed):
         print('Skipped: ' + url)
-        pass
+        continue
     else:
         get_product_data(url)
