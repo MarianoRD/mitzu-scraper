@@ -93,10 +93,10 @@ for category in categories:
 
 # Gets and save the data from each product
 for url in products_links:
-    print(url)
     print("Product: " + url)
     # Check is the product has already been processed
     if (url in processed):
+        print('Skipped: ' + url)
         pass
     else:
         get_product_data(url)
