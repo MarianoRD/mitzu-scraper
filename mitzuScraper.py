@@ -19,6 +19,9 @@ def get_products_url(url, products):
 
 def save_product_data(file_path, product):
     with open(file_path, 'a') as file:
+        product['title'] = product['title'].replace(",", ".")
+        product['description'] = product['description'].replace(",", ".")
+        product['model'] = product['model'].replace(",", ".")
         line = '{0},{1},{2}\n'.format(product['title'],
                                       product['description'],
                                       product['model'])
